@@ -102,7 +102,7 @@ The user must load the following data:
 - *TB_TADsRes_#c*: array of TAD boundaries position, one for each chromosome. Each array is as long as the number of TAD boundaries identified in the corrisponding chromosome and its coefficients are equal to the number of the bins of the matrix *M_TADsRes_#c* identified as boundaries. The symbols *#c* must be replaced with the actual chromosome number (for example, replace *#c* with *1* for chromosome 1, so that *TB_TADsRes_#c* becomes *TB_TADsRes_1*). A total of *C* arrays must be uploaded.
 - *M_MedRes_#c*: intra-chromosomal contact map of each chromosome at medium resolution (set at *MedRes* initial parameter). The symbols *#c* must be replaced with the actual chromosome number (for example, replace *#c* with *1* for chromosome 1, so that *M_MedRes_#c* becomes *M_MedRes_1*). A total of *C* matrixes must be uploaded.
 - *XYZ_MedRes_chr#c*: medium resolution (set at the *MedRes* initial parameter) 3D structure of each chromosome, computed with the favorite 3D reconstruction algorithm from *MedRes* intra-chromosomal contact maps (here called *S.MedRes.mapp_regs.chr_#c*, with the symbols *#c* replaced by the actual chromosome number -- *S.MedRes.mapp_regs.chr_1* for chromosome 1) which result from the removal of the centromeric region. The 3D structure is in the *Nx3* matrix format (with *N* equal to the number of points of the structure, i.e. to the number of bins in *S.MedRes.mapp_regs.chr_#c* matrix, and the three columns corresponding to the 3D coordinates *x*, *y*, *z*). The symbols *#c* must be replaced with the actual chromosome number (for example, replace *#c* with *1* for chromosome 1, so that *XYZ_MedRes_chr#c* becomes *XYZ_MedRes_chr1*). A total of *C* structures must be uploaded. 
-- *M_MedRes_#c*: intra-chromosomal contact map of each chromosome at high resolution (set at *HiRes* initial parameter). The symbols *#c* must be replaced with the actual chromosome number (for example, replace *#c* with *1* for chromosome 1, so that *M_HiRes_#c* becomes *M_HiRes_1*). A total of *C* matrixes must be uploaded.
+- *M_HiRes_#c*: intra-chromosomal contact map of each chromosome at high resolution (set at *HiRes* initial parameter). The symbols *#c* must be replaced with the actual chromosome number (for example, replace *#c* with *1* for chromosome 1, so that *M_HiRes_#c* becomes *M_HiRes_1*). A total of *C* matrixes must be uploaded.
 - *XYZ_HiRes_chr#c_TAD#t*: high resolution (set at *HiRes* initial parameter) 3D structure of each TAD, computed with the favorite 3D reconstruction algorithm from *HiRes* matrix diagonal blocks (here called *S.HiRes.mapp_regs.chr_#c.block_#t*, with the symbols *#c* replaced by the actual chromosome number and the symbols *#t* replaced by the TAD number -- *S.HiRes.mapp_regs.chr_1.block_1* for the first TAD of chromosome 1) corresponding to TADs which result from the removal of the centromeric region. The 3D structure is in the *Nx3* matrix format (with *N* equal to the number of points of the structure, i.e. to the number of bins in *S.HiRes.mapp_regs.chr_#c.block_#t* matrix, and the three columns corresponding to the 3D coordinates *x*, *y*, *z*). The symbols *#c* must be replaced with the actual chromosome number and the symbols *#t* by the TAD number (for example, replace *#c* with *1* and *#t* with *1* for TAD 1 of chromosome 1, so that *XYZ_HiRes_chr#c_TAD#t* becomes *XYZ_HiRes_chr1_TAD1*). A total of *C x T(i)* (with *T(i)* equal to the number TADs of chromosome *i*) structures must be uploaded. 
 
 
@@ -113,9 +113,15 @@ The user must load the following data:
 
 Once having saved the script with the parameters modified as indicated in paragraph *1* and having loaded in Matlab all the necessary data listed in paragraph *2*, just run it.
 
+
+
 #### Main output
 
-The pipeline creates a Matlab structure (*S*) and the final output is stored in *S.LowRes.XYZ_GENOME*.
+The pipeline creates a Matlab structure (*S*) and the final output, obtained with the multi-scale (3-levels) optimal alignment procedure, is stored in two ways: 
+- *S.LowRes.XYZ_Hi_aligned*: high resolution 3D structures of individual chromosomes
+- *S.LowRes.XYZ_GENOME*: high resolution 3D structure of the whole genome, not separating chromosomes.
+
+
 
 #### Additional outputs
 
@@ -128,8 +134,9 @@ The first level of the structure *S* contains 4 fields: *LowRes*, *TADsRes*, *Me
 - *length_chrs*: length of each chromosome (i.e. number of bins of each chromosome in the low resolution Hi-C map)
 - *XYZ_chrs*: low resolution 3D structures of each chromosome
 - *XYZ_Med_aligned*: medium resolution 3D structures of each chromosomes, resulted from the optimal alignment of the medium resolution chromosomal 3D structures (*S.MedRes.XYZ_mapp_regs*) on the low resolution chromosomal 3D structures (*S.LowRes.XYZ_chrs*)
-- *XYZ_Med_aligned*:
-- *XYZ_GENOME*:
+- *XYZ_Med_aligned*: medium resolution 3D structures of each chromosome, resulted from the optimal alignment of the medium resolution chromosomal 3D structures (*S.MedRes.XYZ_mapp_regs*, discarding unmappable centromeric regions) on the low resolution chromosomal 3D structures (*S.LowRes.XYZ_chrs*)
+- *XYZ_Hi_aligned*: high resolution 3D structures of each chromosome, resulted from the application to the high resolution chromosomal 3D structures (stored in *S* as *S.MedRes.XYZ_Hi_chrs* -- see below -- discarding unmappable centromeric regions, already aligned to the medium resolution chromosomal 3D structures) of the optimal alignment transform calculated between the medium resolution chromosomal 3D structures (*S.MedRes.XYZ_mapp_regs*, discarding unmappable centromeric regions) and the low resolution chromosomal 3D structures (*S.LowRes.XYZ_chrs*)
+- *XYZ_GENOME*: high resolution 3D structure of the whole genome, resulted from the concatenation of high resolution 3D structures of each chromosome, optimally aligned in the genome (*XYZ_Hi_aligned*)
 
 
 ##### 2. Fields in *TADsRes*
@@ -145,15 +152,34 @@ The first level of the structure *S* contains 4 fields: *LowRes*, *TADsRes*, *Me
 
 - *Maps_chrs*: medium resolution intra-chromosomal Hi-C matrixes (*M_MedRes_#c*)
 - *length_chrs*: length of each chromosome (i.e. number of bins of each chromosome in the medium resolution Hi-C map)
-- *idx_chrs*: logical array with *1* in bins corresponding to the centromeric region (i.e. null bins in the medium resolution intra-chromosomal contact map *S.MedRes.Maps_chrs*)
+- *idx_chrs*: logical array for each chromosome with *1* in bins corresponding to the centromeric region (i.e. null bins in the medium resolution intra-chromosomal contact map *S.MedRes.Maps_chrs*)
 - *mapp_regs*: medium resolution intra-chromosomal Hi-C maps after the removal of the centromeric region from *S.MedRes.Maps_chrs*)
 - *XYZ_mapp_regs*: medium resolution 3D structures of each chromosome computed from *S.MedRes.mapp_regs* (only mappable regions)
 - *XYZ_chrs*: medium resolution 3D structures of each chromosome, re-introducing all bins (assigning null coordinates to unmappable centromeric regions)
-- *TADs_dim*: TADs dimensions (i.e. number of bins of the corresponding matrix block) for each chromosome
-- *TADs_start*: starting bin of each TAD in each intra-chromosomal matrix (including unmappable centromeric regions)
-- *TADs_end*: ending bin of each TAD in each intra-chromosomal matrix (including unmappable centromeric regions)
+- *TADs_dim*: TADs dimensions (i.e. number of bins of the corresponding medium resolution matrix block)
+- *TADs_start*: starting bin of each TAD in each intra-chromosomal medium resolution matrix *S.MedRes.Maps_chrs* (including unmappable centromeric regions)
+- *TADs_end*: ending bin of each TAD in each intra-chromosomal medium resolution matrix *S.MedRes.Maps_chrs* (including unmappable centromeric regions)
 - *XYZ_TADs*: medium resolution 3D structures of each TAD in each chromosome (including unmappable centromeric regions)
 - *XYZ_TADs_mapp*: medium resolution 3D structures of each TAD in each chromosome (discarding unmappable centromeric regions)
+- *XYZ_Hi_aligned*: high resolution 3D structures of each TAD, resulted from the optimal alignment of the high resolution TADs 3D structures (*S.HiRes.XYZ_mapp_regs*, discarding unmappable centromeric regions) on the medium resolution TADs 3D structures (*S.MedRes.XYZ_TADs_mapp*, discarding unmappable centromeric regions)
+- *XYZ_Hi_chrs*: high resolution 3D structures of each chromosome, resulted from the concatenation of TADs high resolution 3D structures *S.MedRes.XYZ_Hi_aligned* for each chromosome (discarding unmappable centromeric regions)
+
+
+
+
+##### 4. Fields in *HiRes* 
+
+- *Maps_chrs*: high resolution intra-chromosomal Hi-C matrixes (*M_HiRes_#c*)
+- *TB_chrs*: array of TAD boundaries position (i.e. bin of the high resolution matrix *S.HiRes.Maps_chrs* in which there is a TAD boundary)
+- *blocks_chrs*: high resolution Hi-C contact maps of each TAD in each chromosome, corresponding to diagonal blocks in the high resolution intra-chromosomal Hi-C maps *S.HiRes.Maps_chrs* (including unmappable centromeric regions)
+- *TADs_dim*: TADs dimensions (i.e. number of bins of the corresponding matrix blocks *S.HiRes.blocks_chrs*)
+- *TADs_start*: starting bin of each TAD in each intra-chromosomal high resolution matrix *S.HiRes.Maps_chrs* (including unmappable centromeric regions)
+- *TADs_end*: ending bin of each TAD in each intra-chromosomal high resolution matrix *S.HiRes.Maps_chrs* (including unmappable centromeric regions)
+- *idx_blocks_chrs*: logical array for each TAD-block with *1* in bins corresponding to the centromeric region (i.e. null bins in the high resolution TAD-block *S.HiRes.blocks_chrs*) 
+- *mapp_regs*: high resolution Hi-C maps of each TAD in each chromosome, after the removal of the centromeric region from *S.HiRes.blocks_chrs*
+- *XYZ_mapp_regs*: high resolution 3D structures of each TAD in each chromosome (discarding unmappable centromeric regions)
+- *XYZ_TADs_chrs*: high resolution 3D structures of each TAD in each chromosome (including unmappable centromeric regions)
+- *num_TADs_chrs*: number of TADs in each chromosome
 
 
 
@@ -163,14 +189,17 @@ The first level of the structure *S* contains 4 fields: *LowRes*, *TADsRes*, *Me
 
 
 
-
-
+## Author
 
 
 ## License
 
 
-
-
-
 ## Citation
+
+
+## Acknowledgments
+
+
+
+
