@@ -1,28 +1,42 @@
-% this section must be modified with the values adapted for the user's
-% study case
+%% 1. Set initial parameters
+% this section must be modified with the values adapted for user's study case
 
-C = 20; % chromosomes number
-LowRes = 10000000; % enter the chosen low resolution (to compute whole-genome reference structure)
-TADsRes = 2000000; % enter the chosen TADs-resolution (to identify TAD boundaries)
-MedRes = 1000000; % enter the chosen medium resolution (to compute chromosomes structure)
-HiRes = 100000; % enter the chosen high resolution (to compute TADs structure)
+C = 20; % number of chromosomes
+LowRes = 10000000; % enter the chosen low resolution (whole-genome level)
+TADsRes = 2000000; % enter the chosen TADs-resolution (at which TAD boundaries are identified)
+MedRes = 1000000; % enter the chosen medium resolution (chromosomes structure level)
+HiRes = 100000; % enter the chosen high resolution (TADs structure level)
 
-ResRatioT = TADsRes/HiRes; % scaling factor between the resolution used to identify TAD boundaries and the high resolution (used to compute TADs structure)
-ResRatioM = MedRes/HiRes; % scaling factor between the medium resolution (used to compute chromosomes structure) and the high resolution (used to compute TADs structure)
+ResRatioT = TADsRes/HiRes; % scaling factor between the resolution at which TAD boundaries are defined and the high resolution (of TADs structures)
+ResRatioM = MedRes/HiRes; % scaling factor between the medium resolution (of chromosomes structures) and the high resolution (of TADs structures)
 
-%% 
-% note: chromosome X is called '20'
+%% 2. Load necessary data
 
-% load:
-% M_LowRes = whole-genome low resolution contact map (inter- and intra-chromosomal)
+% M_LowRes = whole-genome low resolution Hi-C map (inter- and intra-chromosomal)
+
 % XYZ_LowRes_gen = low resolution 3D structure of the whole genome (computed with the custom 3D reconstruction algorithm); N*3 matrix (x,y,z coordinates of the N points of the structure)
+
 % L_LowRes = array of C components (C = number of chromosomes); each component is the number of bins of each chromosome in the low resolution contact map
-% M_TADsRes_#c = intra-chromosomal contact map of each chromosome at the resolution used to compute TAD boundaries (TADsRes); the #c symbol must be replaced with the chromosome number; a total of C matrixes (number of chromosomes)
-% TB_TADsRes_#c = array of TAD boundaries position (array of the bins of the TADs-resolution matrix in which there is a TAD boundary); the #c symbol must be replaced with the chromosome number; the length of the array is equal to the number of TAD boundaries identified in the chromosome number #c; a total of C arrays (number of chromosomes)
+
+% M_TADsRes_#c = intra-chromosomal contact map of each chromosome at the resolution at which TAD boundaries are defined (TADsRes); the #c symbol must be replaced with the chromosome number; a total of C matrixes (number of chromosomes)
+
+% TB_TADsRes_#c = array of TAD boundaries position (array of the bins of the TADs-resolution matrix in which there is a TAD boundary); the #c symbol must be replaced with the chromosome number; the length of the array is equal to the 
+%number of TAD boundaries identified in chromosome number #c; a total of C arrays (number of chromosomes)
+
 % M_MedRes_#c = intra-chromosomal contact map of each chromosome at medium resolution (MedRes); the #c symbol must be replaced with the chromosome number; a total of C matrixes (number of chromosomes)
-% XYZ_MedRes_chr#c = medium resolution 3D structure of each chromosome (computed with the custom 3D reconstruction algorithm from medium resolution intra-chromosomal contact maps resulted from centromere region removal, here called 'S.MedRes.mapp_regs.chr_#c'); N*3 matrix (x,y,z coordinates of the N points of the structure); the #c symbol must be replaced with the chromosome number; a total of C matrixes (number of chromosomes)
+
+% XYZ_MedRes_chr#c = medium resolution 3D structure of each chromosome (computed with the custom 3D reconstruction algorithm from medium resolution intra-chromosomal contact maps resulted from centromere region removal, here called 
+%'S.MedRes.mapp_regs.chr_#c'); N*3 matrix (x,y,z coordinates of the N points of the structure); the #c symbol must be replaced with the chromosome number; a total of C matrixes (number of chromosomes)
+
 % M_HiRes_#c = intra-chromosomal contact map of each chromosome at high resolution (HiRes); the #c symbol must be replaced with the chromosome number; a total of C matrixes (number of chromosomes)
-% XYZ_HiRes_chr#c_TAD#t = high resolution 3D structure of each TAD (computed with the custom 3D reconstruction algorithm from high resolution TADs matrix blocks resulted from centromere region removal, here called 'S.HiRes.mapp_regs.chr_#c.block_#t); N*3 matrix (x,y,z coordinates of the N points of the structure); the #c symbol must be replaced with the chromosome number; the #t symbol must be replaced with the TAD number; a total number of matrixes equal to C * Tc (Tc = number of TADs of each chromosome)
+
+% XYZ_HiRes_chr#c_TAD#t = high resolution 3D structure of each TAD (computed with the custom 3D reconstruction algorithm from high resolution TADs matrix blocks resulted from centromere region removal, here called 
+%'S.HiRes.mapp_regs.chr_#c.block_#t'); N*3 matrix (x,y,z coordinates of the N points of the structure); the #c symbol must be replaced with the chromosome number; the #t symbol must be replaced with the TAD number; a total number of 
+%matrixes equal to C * T(i) (T(i) = number of TADs of chromosome i)
+
+
+%% 3. Run the script
+
 
 S = [];
 S.LowRes.Map = M_LowRes;
@@ -44,7 +58,8 @@ for i = 1:C    % for each chromosome ('i' index will refer to chromosome number)
     if eval(['S.TADsRes.TB_chrs.TB_' num2str(i) '(1) == 1']) || eval(['S.TADsRes.TB_chrs.TB_' num2str(i) '(1) == 2']) % removal of the first TAD boundary if it is positioned in the first or second bin
             eval(['S.TADsRes.TB_chrs.TB_' num2str(i) '(1) = [];']);
     end
-    if eval(['S.TADsRes.TB_chrs.TB_' num2str(i) '(end) == length(S.TADsRes.Maps_chrs.M_' num2str(i) ')']) || eval(['S.TADsRes.TB_chrs.TB_' num2str(i) '(end) == length(S.TADsRes.Maps_chrs.M_' num2str(i) ')-1']) % removal of the last TAD boundary if it is positioned in the last or penultimate bin 
+    if eval(['S.TADsRes.TB_chrs.TB_' num2str(i) '(end) == length(S.TADsRes.Maps_chrs.M_' num2str(i) ')']) || eval(['S.TADsRes.TB_chrs.TB_' num2str(i) '(end) == length(S.TADsRes.Maps_chrs.M_' num2str(i) ')-1']) % removal of the last TAD boundary if it is 
+        %positioned in the last or penultimate bin 
         eval(['S.TADsRes.TB_chrs.TB_' num2str(i) '(end) = [];']);
     end
     %map_TADsRes = find(idx_TADsRes == 0); % array wich maps the original bin numbers (comprising the centromere; corresponding to the array coefficients) to the new bin numbers (not comprising the centromere; corresponding to the array coefficient indexes)
@@ -53,7 +68,7 @@ for i = 1:C    % for each chromosome ('i' index will refer to chromosome number)
     % medium resolution
     eval(['S.MedRes.Maps_chrs.chr_' num2str(i) '= M_MedRes_' num2str(i) ';']);
     eval(['S.MedRes.length_chrs.chr_' num2str(i) '= length(S.MedRes.Maps_chrs.chr_' num2str(i) ') ;' ]); % store in S the lengths of each medium resolution chromosome
-    eval(['S.MedRes.idx_chrs.chr_' num2str(i) '= sum(S.MedRes.Maps_chrs.chr_' num2str(i) ')== 0;']); % logical array with 1 in bins corresponding to centromere region (zero bins in the medium resolution intra-chromosomal contact map)
+    eval(['S.MedRes.idx_chrs.chr_' num2str(i) '= sum(S.MedRes.Maps_chrs.chr_' num2str(i) ')== 0;']); % logical array with 1 in bins corresponding to centromeric region (null bins in the medium resolution intra-chromosomal contact map)
     
     eval(['S.MedRes.mapp_regs.chr_' num2str(i) '=  S.MedRes.Maps_chrs.chr_' num2str(i) ';' ]); % removal of zero bins (corresponding to centromere) from each medium resolution intra-chromosomal contact map
     eval(['S.MedRes.mapp_regs.chr_' num2str(i) '(S.MedRes.idx_chrs.chr_' num2str(i) ', :) = []; ' ]);
@@ -64,7 +79,8 @@ for i = 1:C    % for each chromosome ('i' index will refer to chromosome number)
     eval(['S.MedRes.XYZ_mapp_regs.chr_' num2str(i) '= XYZ_MedRes_chr' num2str(i) ';']); 
     
     eval(['S.MedRes.XYZ_chrs.XYZ_' num2str(i) '= zeros(S.MedRes.length_chrs.chr_' num2str(i) ', 3);']); % reindexing of each chromosome 3D structure in order to take into account centromere region (corresponding to zero bins of the contact map)
-    eval(['map_MedRes = find(S.MedRes.idx_chrs.chr_' num2str(i) '== 0) ;' ]); % array wich maps the original bin numbers (comprising the centromere; corresponding to the array coefficients) to the new bin numbers (not comprising the centromere; corresponding to the array coefficient indexes)
+    eval(['map_MedRes = find(S.MedRes.idx_chrs.chr_' num2str(i) '== 0) ;' ]); % array wich maps the original bin numbers (comprising the centromere; corresponding to the array coefficients) to the new bin numbers (not comprising the centromere; corresponding to 
+    %the array coefficient indexes)
     for k = 1:length(map_MedRes)
         eval(['S.MedRes.XYZ_chrs.XYZ_' num2str(i) '(map_MedRes(k), :) = S.MedRes.XYZ_mapp_regs.chr_' num2str(i) '(k, :) ;' ]); % chromosome 3D structure with zero coordinates given to the centromere region
     end
@@ -111,9 +127,12 @@ for i = 1:C    % for each chromosome ('i' index will refer to chromosome number)
         
             % mapping of TADs_dim, TADs_start, TADs_end from HiRes to MedRes
             eval(['S.MedRes.TADs_dim.chr_' num2str(i) '.block_' num2str(j) '= fix(S.HiRes.TADs_dim.chr_' num2str(i) '.block_' num2str(j) '/ResRatioM);']); % stores in S the length of each TAD at medium resolution 
-            eval(['S.MedRes.TADs_start.chr_' num2str(i) '.block_' num2str(j) '= 1 + fix(S.HiRes.TADs_start.chr_' num2str(i) '.block_' num2str(j) '/ResRatioM);' ]); % stores in S the start position of each TAD at medium resolution (first bin of the TAD block in the medium resolution intra-chromosomal contact map)
-            eval(['S.MedRes.TADs_end.chr_' num2str(i) '.block_' num2str(j) '= fix(S.HiRes.TADs_end.chr_' num2str(i) '.block_' num2str(j) '/ResRatioM);' ]); % stores in S the end position of each TAD at medium resolution (last bin of the TAD block in the medium resolution intra-chromosomal contact map)
-            eval(['S.MedRes.XYZ_TADs.chr_' num2str(i) '.block_' num2str(j) '= S.MedRes.XYZ_chrs.XYZ_' num2str(i) '( S.MedRes.TADs_start.chr_' num2str(i) '.block_' num2str(j) ': S.MedRes.TADs_end.chr_' num2str(i) '.block_' num2str(j) ', :);' ]); % splitting of each medium resolution chromosome 3D structure in medium resolution 3D structures corresponding to TADs identified in the chromosome
+            eval(['S.MedRes.TADs_start.chr_' num2str(i) '.block_' num2str(j) '= 1 + fix(S.HiRes.TADs_start.chr_' num2str(i) '.block_' num2str(j) '/ResRatioM);' ]); % stores in S the start position of each TAD at medium resolution (first bin of the 
+            %TAD block in the medium resolution intra-chromosomal contact map)
+            eval(['S.MedRes.TADs_end.chr_' num2str(i) '.block_' num2str(j) '= fix(S.HiRes.TADs_end.chr_' num2str(i) '.block_' num2str(j) '/ResRatioM);' ]); % stores in S the end position of each TAD at medium resolution (last bin of the TAD block in the 
+            %medium resolution intra-chromosomal contact map)
+            eval(['S.MedRes.XYZ_TADs.chr_' num2str(i) '.block_' num2str(j) '= S.MedRes.XYZ_chrs.XYZ_' num2str(i) '( S.MedRes.TADs_start.chr_' num2str(i) '.block_' num2str(j) ': S.MedRes.TADs_end.chr_' num2str(i) '.block_' num2str(j) ', :);' ]); % splitting of 
+            %each medium resolution chromosome 3D structure in medium resolution 3D structures corresponding to TADs identified in the chromosome
         
             % removal of centromere coordinates from TADs medium resolution 3D structures
             XYZ = eval(['S.MedRes.XYZ_TADs.chr_' num2str(i) '.block_' num2str(j) ';' ]); 
@@ -182,7 +201,8 @@ for i = 1:C    % for each chromosome ('i' index will refer to chromosome number)
     eval(['S.HiRes.num_TADs_chrs.chr_' num2str(i) '= t+1;']); 
 end
 
-%% composing MedRes-chromosomes with HiRes-TADs  ->  building HiRes chromosomes 3D structures
+
+%% optimal alignment of HiRes-TADs on MedRes-chromosomes -> building HiRes chromosomes 3D structures
 
 for i = 1:C     % for each chromosome
     t = eval(['S.HiRes.num_TADs_chrs.chr_' num2str(i) ';']);
@@ -217,7 +237,8 @@ for i = 1:C     % for each chromosome
             eval(['S.MedRes.XYZ_Hi_aligned.chr_' num2str(i) '.block_' num2str(j) ' = XYZ_Hi_aligned;' ]);   % stores in S the high resolution TAD structures, aligned to its chromosome
         
         else
-            eval(['S.MedRes.XYZ_Hi_aligned.chr_' num2str(i) '.block_' num2str(j) ' = zeros(S.HiRes.TADs_dim.chr_' num2str(i) '.block_' num2str(j) ', 3);' ]);   % if the considered matrix block is completely zero, we assign zero coordinates to the correspondign structure (matlab will discard them)
+            eval(['S.MedRes.XYZ_Hi_aligned.chr_' num2str(i) '.block_' num2str(j) ' = zeros(S.HiRes.TADs_dim.chr_' num2str(i) '.block_' num2str(j) ', 3);' ]);   % if the considered matrix block is completely zero, we assign zero coordinates to the 
+            %correspondign structure (matlab will discard them)
         end
     end
 end
@@ -232,7 +253,8 @@ X = [];
     eval(['S.MedRes.XYZ_Hi_chrs.chr_' num2str(i) ' = X; ' ]); 
 end
 
-%% procrustes tra S.MedRes.XYZ_mapp_regs e S.LowRes.XYZ_chrs
+%% optimal alignment of HiRes-chromosomes on LowRes-genome -> building HiRes genome 3D structure
+
 for i = 1:C
     eval(['XYZ_Med = S.MedRes.XYZ_mapp_regs.chr_' num2str(i) ';']);
     eval(['XYZ_Low = S.LowRes.XYZ_chrs.XYZ_' num2str(i) ';']);
@@ -275,10 +297,3 @@ for i = 1:C
     X = cat(1, X, eval(['S.LowRes.XYZ_Hi_aligned.chr_' num2str(i) ]));
 end
 eval('S.LowRes.XYZ_GENOME = X; ');
-
-
-
-
-
-
-
